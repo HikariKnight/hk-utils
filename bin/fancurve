@@ -1,0 +1,18 @@
+#!/bin/bash
+# This script depends on rocm-smi from: https://github.com/RadeonOpenCompute/ROC-smi
+TEMP=$(sensors | grep temp1: | cut -c 16-17)
+SMI="rocm-smi"
+
+if [ $TEMP -gt 67 ]; then
+    sudo $SMI --setfan 255
+elif [ $TEMP -gt 60 ]; then
+    sudo $SMI --setfan 250
+elif [ $TEMP -gt 50 ]; then
+    sudo $SMI --setfan 220
+elif [ $TEMP -gt 45 ]; then
+    sudo $SMI --setfan 170
+elif [ $TEMP -gt 42 ]; then
+    sudo $SMI --setfan 150
+else
+    sudo $SMI --setfan 120
+fi
