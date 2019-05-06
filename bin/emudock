@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+dockdisplay=(DP-1 VGA-1)
+laptopdisplay="LVDS-1"
+
+
+attach_display() {
+        output=$1
+        action=$2
+
+        xrandr --output $output --$action
+}
+
+if [ "$1" == "on" ];
+then
+        attach_display $laptopdisplay off
+
+        for dev in "${dockdisplay[@]}"
+        do
+                attach_display "$dev" auto
+        done
+
+        xrandr --output "VGA-1" --left-of "HDMI-1"
+elif [ "$1" == "off" ];
+then
+        for dev in "${dockdisplay[@]}"
+        do
+                attach_display "$dev" off
+        done
+
+        attach_display $laptopdisplay on
+elif [ "$1" == "vga" ];
+then
+        attach_display "HDMI-1" off
+        attach_display "LVDS-1" auto
+        attach_display "VGA-1" auto
+elif [ "$1" == "hdmi" ];
+then
+        attach_display "HDMI-1" auto
+        attach_display "VGA-1" off
+        attach_display "LVDS-1" auto
+else
+        # Check if lid is closed
+        grep -iq "closed" "/proc/acpi/button/lid/LID/state"
+
+        # If it is closed, go into docking mode, otherwise go into auto mode
+        if [[ $? -eq 0 ]]; then
+                attach_display "LVDS-1" off
+                attach_display "VGA-1" auto
+                attach_display "DP-1" primary
+                #attach_display "HDMI-1" auto
+                #xrandr --output "VGA-1" --left-of "HDMI-1"
+                #xrandr --newmode "1920x1080_60.00"  173.00  1920 2048 2248 2576  1080 1083 1088 1120 -hsync +vsync
+                xrandr --addmode DP-1 1920x1080_60.00
+                xrandr --output DP-1 --mode 1920x1080_60.00
+                xrandr --output DP-1 --left-of VGA-1
+        # else
+        #         attach_display "HDMI-1" off
+        #         attach_display "VGA-1" off
+        #         attach_display "LVDS-1" auto
+        #         attach_display "HDMI-1" auto
+        #         attach_display "VGA-1" auto
+        fi
+fi
